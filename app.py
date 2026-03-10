@@ -62,9 +62,14 @@ def subir_pdf():
 
     return "Solo se permiten archivos PDF"
 @app.route("/crear_setlist", methods=["POST"])
+@app.route("/crear_setlist", methods=["POST"])
 def crear_setlist():
 
     seleccionadas = request.form.getlist("canciones")
+
+    # Validar que haya canciones seleccionadas
+    if len(seleccionadas) == 0:
+        return redirect("/")
 
     writer = PdfWriter()
 
@@ -89,7 +94,6 @@ def crear_setlist():
         writer.write(f)
 
     return send_file(salida)
-
 if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 5000))
