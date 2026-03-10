@@ -66,10 +66,8 @@ def subir_pdf():
             canciones = []
 
         # agregar nueva canción
-        canciones.append({
-            "nombre": nombre,
-            "url": url_pdf
-        })
+        nueva_cancion = {"nombre": nombre,"url": resultado["secure_url"]}
+        canciones.append(nueva_cancion)
 
         # guardar biblioteca
         with open(config.BIBLIOTECA_JSON, "w") as f:
