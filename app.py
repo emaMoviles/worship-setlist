@@ -82,14 +82,13 @@ def subir_pdf():
     return "Solo se permiten archivos PDF"
 
 
-
 @app.route("/crear_setlist", methods=["POST"])
 def crear_setlist():
 
     seleccionadas = request.form.getlist("canciones")
 
-    if len(seleccionadas) == 0:
-        return redirect("/")
+    if not seleccionadas:
+        return "Debes seleccionar al menos una canción"
 
     canciones = obtener_canciones()
 
@@ -99,14 +98,30 @@ def crear_setlist():
 
         if cancion["nombre"] in seleccionadas:
 
-            respuesta = requests.get(cancion["url"])
+            try:
 
-            pdf_bytes = BytesIO(respuesta.content)
+                respuesta = requests.get(cancion["url"])
 
-            reader = PdfReader(pdf_bytes)
+                if respuesta.status_code != 200:
+                    print("No se pudo descargar:", cancion["url"])
+                    continue
 
-            for pagina in reader.pages:
-                writer.add_page(pagina)
+                if len(respuesta.content) == 0:
+                    print("Archivo vacío:", cancion["url"])
+                    continue
+
+                pdf_bytes = BytesIO(respuesta.content)
+
+                reader = PdfReader(pdf_bytes)
+
+                for pagina in reader.pages:
+                    writer.add_page(pagina)
+
+            except Exception as e:
+                print("Error procesando PDF:", e)
+
+    if len(writer.pages) == 0:
+        return "No se pudo crear el setlist"
 
     salida = "setlist.pdf"
 
@@ -114,8 +129,6 @@ def crear_setlist():
         writer.write(f)
 
     return send_file(salida)
-
-
 if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 5000))
