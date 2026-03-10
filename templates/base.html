@@ -20,9 +20,10 @@ body {
 
     background-repeat: no-repeat;
 
-    background-attachment: fixed;
+    min-height: 100vh;
 
 }
+
 
 /* capa para que el texto se vea bien */
 
@@ -37,11 +38,23 @@ body {
     color: white;
 
 }
+@media (max-width: 768px) {
+
+    .contenedor-app {
+
+        padding: 20px;
+
+        border-radius: 0;
+
+    }
+
+}
 
 </style>
 </head>
 
-<body class="bg-light">
+<body>
+
 
 <div class="container mt-4 contenedor-app">
 
