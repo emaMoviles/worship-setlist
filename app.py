@@ -1,11 +1,14 @@
 from flask import Flask, render_template, request, send_file, redirect
-import os
 from pypdf import PdfWriter, PdfReader
 import config
+import os
+import cloudinary.uploader
 from werkzeug.utils import secure_filename
+import json
+import requests
+from io import BytesIO
+
 app = Flask(__name__)
-os.makedirs(config.BIBLIOTECA, exist_ok=True)
-os.makedirs(config.SETLISTS, exist_ok=True)
 def archivo_valido(nombre):
 
     return "." in nombre and \
@@ -13,17 +16,13 @@ def archivo_valido(nombre):
 
 def obtener_canciones():
 
-    canciones = []
+    if not os.path.exists(config.BIBLIOTECA_JSON):
+        return []
 
-    for archivo in os.listdir(config.BIBLIOTECA):
-
-        if archivo.endswith(".pdf"):
-            canciones.append(archivo)
-
-    canciones.sort()
+    with open(config.BIBLIOTECA_JSON, "r") as f:
+        canciones = json.load(f)
 
     return canciones
-
 @app.route("/")
 def index():
 
@@ -49,51 +48,73 @@ def subir_pdf():
 
         nombre = secure_filename(archivo.filename)
 
-        ruta = os.path.join(
-            config.BIBLIOTECA,
-            nombre
+        resultado = cloudinary.uploader.upload(
+            archivo,
+            resource_type="raw",
+            public_id=nombre
         )
 
-        archivo.save(ruta)
+        url_pdf = resultado["secure_url"]
 
-        print("Archivo guardado en:", ruta)
+        # leer biblioteca
+        if os.path.exists(config.BIBLIOTECA_JSON):
+
+            with open(config.BIBLIOTECA_JSON, "r") as f:
+                canciones = json.load(f)
+
+        else:
+            canciones = []
+
+        # agregar nueva canción
+        canciones.append({
+            "nombre": nombre,
+            "url": url_pdf
+        })
+
+        # guardar biblioteca
+        with open(config.BIBLIOTECA_JSON, "w") as f:
+            json.dump(canciones, f, indent=4)
+
+        print("Archivo subido:", url_pdf)
 
         return redirect("/")
 
     return "Solo se permiten archivos PDF"
-@app.route("/crear_setlist", methods=["POST"])
+
+
+
 @app.route("/crear_setlist", methods=["POST"])
 def crear_setlist():
 
     seleccionadas = request.form.getlist("canciones")
 
-    # Validar que haya canciones seleccionadas
     if len(seleccionadas) == 0:
         return redirect("/")
 
+    canciones = obtener_canciones()
+
     writer = PdfWriter()
 
-    for cancion in seleccionadas:
+    for cancion in canciones:
 
-        ruta = os.path.join(
-            config.BIBLIOTECA,
-            cancion
-        )
+        if cancion["nombre"] in seleccionadas:
 
-        reader = PdfReader(ruta)
+            respuesta = requests.get(cancion["url"])
 
-        for pagina in reader.pages:
-            writer.add_page(pagina)
+            pdf_bytes = BytesIO(respuesta.content)
 
-    salida = os.path.join(
-        config.SETLISTS,
-        "culto_actual.pdf"
-    )
+            reader = PdfReader(pdf_bytes)
+
+            for pagina in reader.pages:
+                writer.add_page(pagina)
+
+    salida = "setlist.pdf"
 
     with open(salida, "wb") as f:
         writer.write(f)
 
-    return send_file(salida)
+    return send_file(salida, as_attachment=True)
+
 if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 5000))

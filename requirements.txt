@@ -10,3 +10,6 @@ Werkzeug==3.1.6
 flask
 pypdf
 gunicorn
+cloudinary
+cloudinary
+requests
