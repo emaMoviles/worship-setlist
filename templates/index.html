@@ -25,11 +25,11 @@ placeholder="Buscar canción">
 class="form-check-input"
 type="checkbox"
 name="canciones"
-value="{{cancion}}">
+value="{{cancion.nombre}}">
 
 <label class="form-check-label">
 
-{{cancion}}
+{{ cancion.nombre.replace(".pdf","") }}
 
 </label>
 
