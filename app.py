@@ -114,7 +114,8 @@ def crear_setlist():
         writer.write(f)
 
     return send_file(salida, as_attachment=True)
-
+print("Cloud name:", os.environ.get("CLOUDINARY_CLOUD_NAME"))
+print("API key:", os.environ.get("CLOUDINARY_API_KEY"))
 if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 5000))

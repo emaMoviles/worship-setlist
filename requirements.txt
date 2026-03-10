@@ -11,5 +11,4 @@ flask
 pypdf
 gunicorn
 cloudinary
-cloudinary
 requests
