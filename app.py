@@ -47,11 +47,13 @@ def subir_pdf():
     if archivo and archivo_valido(archivo.filename):
 
         nombre = secure_filename(archivo.filename)
-
+        nombre_sin_extension = os.path.splitext(nombre)[0]
         try:
             resultado = cloudinary.uploader.upload(archivo,
-                                                   resource_type="raw",
-            public_id=nombre)
+            resource_type="raw",
+            public_id=nombre_sin_extension,
+            use_filename=True,
+            unique_filename=False)
         except Exception as e:
             return f"Error subiendo archivo: {e}"
 
