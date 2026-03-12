@@ -48,11 +48,12 @@ def subir_pdf():
 
         nombre = secure_filename(archivo.filename)
 
-        resultado = cloudinary.uploader.upload(
-            archivo,
-            resource_type="raw",
-            public_id=nombre
-        )
+        try:
+            resultado = cloudinary.uploader.upload(archivo,
+                                                   resource_type="raw",
+            public_id=nombre)
+        except Exception as e:
+            return f"Error subiendo archivo: {e}"
 
         url_pdf = resultado["secure_url"]
 
